@@ -43,16 +43,16 @@ int main(){
     //hmmmmm
     //string
     //to store a string u can say ur txt lines use char varible[] now u can store multiple charachter in a variable called string its specifier if @s u can see example here ,
-    char name[]="aur bhai kaisa hai " ;  //double qoutes for variables
+    char name[]="aur bhai kaisa hai " ; //double qoutes for variables
 
-    printf(" %s \n" , name )
+    printf(" %s \n" , name );
 
     //bool
     //so bools are basically condition varibles its specifer is also %d becuse it basically show's 0,1 false,true respectivly '
     //ucan see a working example here
     bool isworking = true ; // u can use (true,1) both means same and (false,0) both means same
-    printf("%d \n" , isworking )
-    printf("")
+    printf("%d \n" , isworking );
+    printf("");
 
 
     return 0;
