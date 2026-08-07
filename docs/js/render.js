@@ -1,0 +1,167 @@
+/* ---------- rendering ---------- */
+const Render = (() => {
+  let els = {};
+  let state = { files: [], current: null, query: '' };
+
+  function init(){
+    els = {
+      sidebar: document.getElementById('sidebar'),
+      tabs: document.getElementById('tabs'),
+      pageDesc: document.getElementById('pageDesc'),
+      lineCount: document.getElementById('lineCount'),
+      content: document.getElementById('content'),
+      status: document.getElementById('status'),
+      search: document.getElementById('searchInput'),
+    };
+  }
+
+  function setStatus(text, cls){
+    els.status.innerHTML = `<span class="pulse"></span><span>${text}</span>`;
+    els.status.className = 'status' + (cls ? ' ' + cls : '');
+  }
+
+  function filteredFiles(){
+    const q = state.query.trim().toLowerCase();
+    if(!q) return state.files;
+    return state.files.filter(f => f.name.toLowerCase().includes(q) || f.file.toLowerCase().includes(q));
+  }
+
+  function selectFile(f){
+    state.current = f;
+    renderAll();
+  }
+
+  function renderNav(){
+    const list = filteredFiles();
+
+    els.sidebar.innerHTML = `<div class="sidebar-label">files · ${state.files.length}</div>` +
+      list.map(f => `
+        <div class="sidebar-item${state.current && state.current.id === f.id ? ' active' : ''}" data-id="${f.id}">
+          <span class="dot"></span>${f.name}
+        </div>
+      `).join('') || `<div class="sidebar-label">no matches</div>`;
+
+    els.sidebar.querySelectorAll('.sidebar-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const f = state.files.find(x => x.id === el.dataset.id);
+        if(f) selectFile(f);
+      });
+    });
+
+    els.tabs.innerHTML = list.map(f => `
+        <button class="tab${state.current && state.current.id === f.id ? ' active' : ''}" data-id="${f.id}">${f.name}</button>
+      `).join('');
+    els.tabs.querySelectorAll('.tab').forEach(el => {
+      el.addEventListener('click', () => {
+        const f = state.files.find(x => x.id === el.dataset.id);
+        if(f) selectFile(f);
+      });
+    });
+  }
+
+  function renderPage(){
+    const current = state.current;
+    if(!current){
+      els.pageDesc.textContent = '';
+      els.lineCount.textContent = '';
+      return;
+    }
+
+    els.pageDesc.textContent = current.file;
+    const lines = current.code.split('\n');
+    els.lineCount.textContent = lines.length + ' lines · ' + current.notes.length + ' notes';
+
+    const codeHtml = lines.map((ln, idx) => {
+      const n = idx + 1;
+      return `<div class="code-line" data-line="${n}"><span class="ln">${n}</span><span class="src">${Highlight.line(ln)}</span></div>`;
+    }).join('');
+
+    const notesHtml = current.notes.map((n, idx) => `
+      <div class="note" data-idx="${idx}" data-lines="${n.lines[0]}-${n.lines[1]}">
+        <div class="note-top">
+          <span class="note-title">${n.title}</span>
+          <span class="badge ${n.type}">L${n.lines[0]}-${n.lines[1]}</span>
+        </div>
+        <div class="note-body">${n.body}</div>
+      </div>
+    `).join('') || `<div class="empty" style="padding:20px 4px;">no annotated comments in this file yet.</div>`;
+
+    els.content.innerHTML = `
+      <div class="content-grid">
+        <div class="code-card">
+          <div class="code-head">
+            <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+            <span class="fname">${current.file}</span>
+            <button class="copybtn" id="copyBtn">copy</button>
+          </div>
+          <div class="code-body" id="codeBody">${codeHtml}</div>
+        </div>
+        <div class="notes-col">
+          <div class="rail-label">what's happening</div>
+          ${notesHtml}
+        </div>
+      </div>
+    `;
+
+    wireNoteInteractions(current);
+  }
+
+  function wireNoteInteractions(current){
+    const codeBody = document.getElementById('codeBody');
+    const copyBtn = document.getElementById('copyBtn');
+
+    if(copyBtn){
+      copyBtn.addEventListener('click', async () => {
+        try{
+          await navigator.clipboard.writeText(current.code);
+          copyBtn.textContent = 'copied';
+          copyBtn.classList.add('copied');
+          setTimeout(() => { copyBtn.textContent = 'copy'; copyBtn.classList.remove('copied'); }, 1200);
+        }catch(e){}
+      });
+    }
+
+    els.content.querySelectorAll('.note').forEach(el => {
+      el.addEventListener('click', () => {
+        els.content.querySelectorAll('.note').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+
+        const [start, end] = el.dataset.lines.split('-').map(Number);
+        codeBody.querySelectorAll('.code-line').forEach(c => c.classList.remove('hl'));
+        let target = null;
+        for(let n = start; n <= end; n++){
+          const l = codeBody.querySelector(`.code-line[data-line="${n}"]`);
+          if(l){ l.classList.add('hl'); if(!target) target = l; }
+        }
+        if(target) target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      });
+    });
+  }
+
+  function renderAll(){
+    renderNav();
+    renderPage();
+  }
+
+  function showLoading(){
+    els.content.innerHTML = `<div class="empty"><div class="spin"></div><div>pulling files from github…</div></div>`;
+  }
+
+  function showEmptyOffline(){
+    els.content.innerHTML = `<div class="empty">couldn't reach github and no cached copy yet.<br>check your connection.<div class="hint">pull to retry once you're back online</div></div>`;
+  }
+
+  function setFiles(files){
+    state.files = files;
+    if(!state.current || !files.find(f => f.id === state.current.id)){
+      state.current = files[0] || null;
+    }
+  }
+
+  function setQuery(q){
+    state.query = q;
+    renderNav();
+  }
+
+  return { init, setStatus, setFiles, renderAll, showLoading, showEmptyOffline, setQuery };
+})();

@@ -4,301 +4,53 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>cpro // notes</title>
-<meta name="theme-color" content="#15130f">
+<meta name="theme-color" content="#120f0a">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg: #15130f; --bg-raised: #1c1a15; --bg-inset: #0f0e0b;
-    --line: #33301f; --line-soft: #26241a;
-    --text: #ece6d6; --text-dim: #a39d87; --text-faint: #6f6a58;
-    --amber: #e8b04b; --amber-dim: #8a6a2a;
-    --t-int:#6fb1ff; --t-float:#ffb454; --t-double:#ff8c5c; --t-char:#ff7fae; --t-string:#8fe28a; --t-bool:#c39bff;
-    --radius:3px; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace; --display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
-  }
-  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
-  body{background:radial-gradient(ellipse 900px 500px at 15% -10%, rgba(232,176,75,0.07), transparent), var(--bg); color:var(--text); font-family:var(--mono); -webkit-font-smoothing:antialiased; min-height:100vh; padding-bottom:env(safe-area-inset-bottom);}
-  ::selection{background:var(--amber-dim); color:#fff;}
-  .grain{position:fixed; inset:0; pointer-events:none; z-index:50; background-image:repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 2px); mix-blend-mode:overlay;}
-  .app{display:flex; flex-direction:column; min-height:100vh;}
-
-  .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg-inset); z-index:10;}
-  .brand{display:flex; align-items:baseline; gap:6px;}
-  .brand .cursor{display:inline-block; width:7px; height:14px; background:var(--amber); animation:blink 1.1s steps(1) infinite;}
-  @keyframes blink{50%{opacity:0;}}
-  .brand h1{font-family:var(--display); font-size:15px; font-weight:700; margin:0;}
-  .brand h1 span{color:var(--amber);}
-  .status{font-size:9.5px; color:var(--text-faint);}
-  .status.live{color:var(--t-string);}
-  .status.err{color:#ff8a8a;}
-  .modebtn{background:var(--bg-raised); border:1px solid var(--line); color:var(--text-dim); font-family:var(--mono); font-size:15px; padding:5px 9px; border-radius:var(--radius);}
-
-  .tabs{display:flex; gap:6px; overflow-x:auto; padding:10px 12px; border-bottom:1px solid var(--line-soft); background:var(--bg-inset);}
-  .tab{flex:none; font-family:var(--mono); font-size:11.5px; padding:7px 11px; border-radius:14px; border:1px solid var(--line); background:var(--bg-raised); color:var(--text-dim); white-space:nowrap;}
-  .tab.active{border-color:var(--amber-dim); color:var(--amber); background:#211e15;}
-
-  main{flex:1; padding:14px 12px 40px;}
-  .desc{font-size:12px; color:var(--text-dim); margin:2px 4px 14px; line-height:1.5;}
-
-  .code-card{background:var(--bg-inset); border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-bottom:16px;}
-  .code-head{display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--line); background:var(--bg-raised);}
-  .dot{width:8px; height:8px; border-radius:50%;}
-  .dot.r{background:#e05a4e;} .dot.y{background:#e0b34e;} .dot.g{background:#5ec26a;}
-  .code-head .fname{margin-left:4px; font-size:11px; color:var(--text-dim);}
-  .code-body{padding:12px 0; overflow-x:auto; font-size:11.5px; line-height:1.8; -webkit-overflow-scrolling:touch;}
-  .code-line{display:flex; white-space:pre;}
-  .code-line.hl{background:rgba(232,176,75,0.08); box-shadow:inset 2px 0 0 var(--amber);}
-  .ln{width:30px; flex:none; text-align:right; padding-right:10px; user-select:none; color:var(--text-faint); opacity:.55;}
-  .code-line.hl .ln{color:var(--amber); opacity:1;}
-  .src{padding-right:16px;}
-  .tk-kw{color:#ff8a8a;} .tk-type{color:#7fb8ff;} .tk-str{color:var(--t-string);} .tk-num{color:var(--t-float);} .tk-cmt{color:var(--text-faint); font-style:italic;} .tk-fn{color:var(--amber);}
-
-  .rail-label{font-size:9.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-faint); margin:0 4px 8px;}
-  .note{background:var(--bg-raised); border:1px solid var(--line-soft); border-left:2px solid var(--line); border-radius:4px; padding:10px 11px; margin-bottom:8px;}
-  .note.active{border-left-color:var(--amber); background:#211e15;}
-  .note-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;}
-  .note-title{font-family:var(--display); font-size:12px; font-weight:600;}
-  .badge{display:inline-flex; align-items:center; font-size:9px; padding:2px 5px; border-radius:2px; border:1px solid var(--line-soft); background:var(--bg-inset); color:var(--text-dim); flex:none;}
-  .badge.int{color:var(--t-int);} .badge.float{color:var(--t-float);} .badge.double{color:var(--t-double);} .badge.char{color:var(--t-char);} .badge.string{color:var(--t-string);} .badge.bool{color:var(--t-bool);}
-  .note-body{font-size:11px; color:var(--text-dim); line-height:1.5;}
-  .note-body code{color:var(--amber); background:var(--bg-inset); padding:1px 4px; border-radius:2px;}
-
-  .empty{padding:40px 20px; text-align:center; color:var(--text-faint); font-size:12px;}
-  .empty .spin{display:inline-block; width:16px; height:16px; border:2px solid var(--line); border-top-color:var(--amber); border-radius:50%; animation:spin .8s linear infinite; margin-bottom:10px;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-
-  body.light{--bg:#f4f1e8; --bg-raised:#ece6d4; --bg-inset:#ffffff; --line:#d8d0b8; --line-soft:#e3ddc8; --text:#2a2618; --text-dim:#5c5540; --text-faint:#948c6f; --amber:#a8721f; --amber-dim:#c9a15f;}
-  body.light .grain{display:none;}
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
 </head>
 <body>
 <div class="grain"></div>
 <div class="app">
+
   <div class="topbar">
     <div class="brand"><span class="cursor"></span><h1>c<span>pro</span>.notes</h1></div>
-    <div style="display:flex; align-items:center; gap:10px;">
+    <div class="searchwrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="searchInput" type="text" placeholder="filter files…" autocomplete="off">
+    </div>
+    <div class="topbar-right">
       <span class="status" id="status">connecting…</span>
-      <button class="modebtn" id="modeToggle">☾</button>
+      <button class="iconbtn" id="modeToggle" aria-label="toggle theme">☾</button>
     </div>
   </div>
 
   <div class="tabs" id="tabs"></div>
 
-  <main>
-    <div class="desc" id="pageDesc"></div>
-    <div id="content"><div class="empty"><div class="spin"></div><div>pulling files from github…</div></div></div>
-  </main>
+  <div class="body-grid">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main>
+      <div class="pagehead">
+        <div class="desc" id="pageDesc"></div>
+        <div class="linecount" id="lineCount"></div>
+      </div>
+      <div id="content"><div class="empty"><div class="spin"></div><div>pulling files from github…</div></div></div>
+    </main>
+  </div>
+
 </div>
 
-<script>
-const REPO_OWNER = 'tarun922';
-const REPO_NAME = 'cpro';
-const CACHE_KEY = 'cpro-notes-cache-v1';
-
-let files = [];
-let current = null;
-
-/* ---------- syntax highlight ---------- */
-function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function highlightLine(line){
-  const cIdx = line.indexOf('//');
-  let code = cIdx >= 0 ? line.slice(0, cIdx) : line;
-  let comment = cIdx >= 0 ? line.slice(cIdx) : '';
-  let html = ''; let last = 0; let m;
-  const tokenRe = /(#include|#define)|("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(\b\d+\.?\d*f?\b)|(\b(?:int|float|double|char|bool|void|return|if|else|for|while|true|false)\b)|(\bprintf|scanf|fgets|getchar|main\b)/g;
-  while((m = tokenRe.exec(code)) !== null){
-    html += escapeHtml(code.slice(last, m.index));
-    const tok = m[0];
-    if(m[1]) html += `<span class="tk-kw">${escapeHtml(tok)}</span>`;
-    else if(m[2]||m[3]) html += `<span class="tk-str">${escapeHtml(tok)}</span>`;
-    else if(m[4]) html += `<span class="tk-num">${escapeHtml(tok)}</span>`;
-    else if(m[5]) html += `<span class="tk-type">${escapeHtml(tok)}</span>`;
-    else if(m[6]) html += `<span class="tk-fn">${escapeHtml(tok)}</span>`;
-    last = tokenRe.lastIndex;
-  }
-  html += escapeHtml(code.slice(last));
-  if(comment) html += `<span class="tk-cmt">${escapeHtml(comment)}</span>`;
-  return html || '&nbsp;';
-}
-
-/* ---------- auto-parse comments into notes ---------- */
-function guessType(text){
-  if(/\bdouble\b/.test(text)) return 'double';
-  if(/\bfloat\b/.test(text)) return 'float';
-  if(/\bbool\b/.test(text)) return 'bool';
-  if(/\bchar\s+\w+\s*\[/.test(text)) return 'string';
-  if(/\bchar\b/.test(text)) return 'char';
-  if(/%s/.test(text)) return 'string';
-  return 'int';
-}
-
-function parseNotes(code){
-  const lines = code.split('\n');
-  const notes = [];
-  let i = 0;
-  while(i < lines.length){
-    const line = lines[i];
-    const trimmed = line.trim();
-    if(trimmed.startsWith('//')){
-      const commentLines = [];
-      let start = i;
-      while(i < lines.length && lines[i].trim().startsWith('//')){
-        commentLines.push(lines[i].trim().replace(/^\/\/\s?/, ''));
-        i++;
-      }
-      // skip blank lines
-      while(i < lines.length && lines[i].trim() === '') i++;
-      const codeStart = i + 1; // 1-indexed
-      let codeEnd = codeStart;
-      // absorb following code lines until next comment-only line or blank gap
-      while(i < lines.length && lines[i].trim() !== '' && !lines[i].trim().startsWith('//')){
-        codeEnd = i + 1;
-        i++;
-      }
-      if(commentLines.length && codeEnd >= codeStart){
-        const bodyText = commentLines.join(' ');
-        notes.push({
-          lines: [codeStart, codeEnd],
-          type: guessType(bodyText + ' ' + lines.slice(codeStart-1, codeEnd).join(' ')),
-          title: commentLines[0].slice(0, 48),
-          body: escapeHtml(bodyText)
-        });
-      }
-    } else {
-      i++;
-    }
-  }
-  return notes;
-}
-
-/* ---------- fetch from github ---------- */
-async function fetchRepoFiles(){
-  const listUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/`;
-  const res = await fetch(listUrl);
-  if(!res.ok) throw new Error('list failed: ' + res.status);
-  const list = await res.json();
-  const cFiles = list.filter(f => f.type === 'file' && f.name.endsWith('.c'));
-  const results = [];
-  for(const f of cFiles){
-    const r = await fetch(f.download_url);
-    const code = await r.text();
-    results.push({
-      id: f.name.replace(/\.c$/, ''),
-      file: f.name,
-      name: f.name.replace(/\.c$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-      code,
-      notes: parseNotes(code)
-    });
-  }
-  return results;
-}
-
-/* ---------- render ---------- */
-function renderTabs(){
-  const tabs = document.getElementById('tabs');
-  tabs.innerHTML = '';
-  files.forEach(f => {
-    const b = document.createElement('button');
-    b.className = 'tab' + (current && current.id === f.id ? ' active' : '');
-    b.textContent = f.name;
-    b.addEventListener('click', () => { current = f; renderPage(); });
-    tabs.appendChild(b);
-  });
-}
-
-function renderPage(){
-  renderTabs();
-  const content = document.getElementById('content');
-  document.getElementById('pageDesc').textContent = current.file;
-  const lines = current.code.split('\n');
-  const codeHtml = lines.map((line, idx) => {
-    const n = idx + 1;
-    return `<div class="code-line" data-line="${n}"><span class="ln">${n}</span><span class="src">${highlightLine(line)}</span></div>`;
-  }).join('');
-
-  const notesHtml = current.notes.map(n => `
-    <div class="note" data-lines="${n.lines[0]}-${n.lines[1]}">
-      <div class="note-top">
-        <span class="note-title">${n.title}</span>
-        <span class="badge ${n.type}">L${n.lines[0]}-${n.lines[1]}</span>
-      </div>
-      <div class="note-body">${n.body}</div>
-    </div>
-  `).join('');
-
-  content.innerHTML = `
-    <div class="code-card">
-      <div class="code-head"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="fname">${current.file}</span></div>
-      <div class="code-body">${codeHtml}</div>
-    </div>
-    <div class="rail-label">what's happening</div>
-    ${notesHtml}
-  `;
-
-  content.querySelectorAll('.note').forEach(el => {
-    el.addEventListener('click', () => {
-      const [s] = el.dataset.lines.split('-');
-      const target = content.querySelector(`.code-line[data-line="${s}"]`);
-      content.querySelectorAll('.code-line').forEach(c => c.classList.remove('hl'));
-      const [start, end] = el.dataset.lines.split('-').map(Number);
-      for(let n = start; n <= end; n++){
-        const l = content.querySelector(`.code-line[data-line="${n}"]`);
-        if(l) l.classList.add('hl');
-      }
-      if(target) target.scrollIntoView({block:'center', behavior:'smooth'});
-    });
-  });
-}
-
-function setStatus(text, cls){
-  const el = document.getElementById('status');
-  el.textContent = text;
-  el.className = 'status' + (cls ? ' ' + cls : '');
-}
-
-async function boot(){
-  const cached = localStorage.getItem(CACHE_KEY);
-  if(cached){
-    try{
-      files = JSON.parse(cached);
-      current = files[0];
-      renderPage();
-      setStatus('cached', '');
-    }catch(e){}
-  }
-  try{
-    const fresh = await fetchRepoFiles();
-    if(fresh.length){
-      files = fresh;
-      current = files[0];
-      localStorage.setItem(CACHE_KEY, JSON.stringify(files));
-      renderPage();
-      setStatus('● live · ' + files.length + ' files', 'live');
-    } else {
-      setStatus('no .c files found', 'err');
-    }
-  }catch(e){
-    if(!cached){
-      document.getElementById('content').innerHTML = `<div class="empty">couldn't reach github and no cached copy yet.<br>check your connection.</div>`;
-    }
-    setStatus('offline · showing cached', 'err');
-  }
-}
-
-document.getElementById('modeToggle').addEventListener('click', () => {
-  document.body.classList.toggle('light');
-  document.getElementById('modeToggle').textContent = document.body.classList.contains('light') ? '☀' : '☾';
-});
-
-if('serviceWorker' in navigator){
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
-}
-
-boot();
-</script>
+<script src="js/config.js"></script>
+<script src="js/highlight.js"></script>
+<script src="js/notesParser.js"></script>
+<script src="js/github.js"></script>
+<script src="js/render.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

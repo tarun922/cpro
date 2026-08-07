@@ -1,5 +1,20 @@
-const CACHE = 'cpro-notes-shell-v1';
-const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'cpro-notes-shell-v2';
+const SHELL = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './css/tokens.css',
+  './css/layout.css',
+  './css/components.css',
+  './js/config.js',
+  './js/highlight.js',
+  './js/notesParser.js',
+  './js/github.js',
+  './js/render.js',
+  './js/app.js',
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
@@ -13,7 +28,7 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// app shell: cache-first. github api calls: network-only (handled by fetch in index.html, not intercepted here).
+// app shell: cache-first. github api calls: network-only (handled by fetch in app.js, not intercepted here).
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if(url.origin !== location.origin) return; // let github api/raw calls pass straight through
