@@ -44,15 +44,15 @@ int main(){
 
     // array[write row num starts with 0 ][write column  num starts with 0 ]
 
-    printf("%d \n" , num[0][0]);// output =1
-    printf("%d \n" , num[0][1]);// output =2
-    printf("%d \n" , num[0][2]);// output =3
-    printf("%d \n" , num[1][0]);// output =4
-    printf("%d \n" , num[1][1]);// output =5
-    printf("%d \n" , num[1][2]);// output =6
-    printf("%d \n" , num[0][0]);// output =7
-    printf("%d \n" , num[0][1]);// output =8
-    printf("%d \n" , num[0][2]);// output =9
+    printf("%d \n" , num2d[0][0]);// output =1
+    printf("%d \n" , num2d[0][1]);// output =2
+    printf("%d \n" , num2d[0][2]);// output =3
+    printf("%d \n" , num2d[1][0]);// output =4
+    printf("%d \n" , num2d[1][1]);// output =5
+    printf("%d \n" , num2d[1][2]);// output =6
+    printf("%d \n" , num2d[2][0]);// output =7
+    printf("%d \n" , num2d[2][1]);// output =8
+    printf("%d \n" , num2d[2][2]);// output =9
 
     //u can also update element of arrays
     // js call the index of that element and assign new value
