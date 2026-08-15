@@ -1,7 +1,7 @@
 //all about arrays
 
 #include <stdio.h>
-#include <sring.g>
+
 
 int main(){
 
@@ -10,7 +10,7 @@ int main(){
     //defining a array
     // data type array[]={values ......}
     // let us take an example
-    int num[]=[1,2,3,4,5];
+    int num[]={1,2,3,4,5};
     // now what if we want to print num in a array
     // for this u have to do this array[write here the index num of element it starts from 0 ]
     // see how it looks
