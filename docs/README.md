@@ -14,6 +14,16 @@
 
 That's it, no APK needed for this part — this alone gives you an installable app icon on your phone.
 
+## Folders
+
+Just make folders inside the repo (e.g. `basics/`, `gaming/`, `dsa/`) and drop `.c` files in them — nothing else to configure. `.c` files sitting directly in the repo root still show up too, grouped under **misc**.
+
+- **Desktop**: the left sidebar groups files under a collapsible header per folder — tap a folder name to fold/unfold it.
+- **Mobile**: a row of folder pills sits above the file tabs. Tap a folder to switch which files show in the row below (it also jumps straight to that folder's first file).
+- The search box (desktop) ignores folders and just filters across every file by name.
+
+Folders are pulled recursively (any depth), but only the top-level folder name is used for grouping — so `gaming/snake/level1.c` still groups under **gaming**.
+
 ## What changed in this pass
 
 - Split the old single `index.html` (with inline `<style>`/`<script>`) into separate files, so each piece is easy to find and edit on its own:
@@ -33,3 +43,12 @@ That's it, no APK needed for this part — this alone gives you an installable a
   - Notes use a proper sans-serif (Inter) for the annotation text so it reads better than mono at small sizes, while code and UI chrome stay in JetBrains Mono.
   - Theme choice (dark/light) now persists across visits.
 - `sw.js` was updated to cache the new file list (bumped to `cpro-notes-shell-v2`, so old cached shells get replaced automatically on next load).
+
+## What changed in this pass (folder support)
+
+- `js/github.js` now walks the **whole repo tree recursively** (via GitHub's Git Trees API) instead of only the root folder, so `.c` files inside any subfolder are picked up. Each file now carries its folder name; root-level files fall into a `misc` group.
+- `js/render.js` groups files by folder:
+  - Desktop sidebar → collapsible folder sections.
+  - Mobile → a folder-pill row above the existing file-tab row.
+- `index.html` got one new element (`#folderTabs`) for the mobile folder row; `css/layout.css` got the matching styles.
+- `sw.js` bumped to `cpro-notes-shell-v3` so the update actually reaches phones with an old cached shell.

@@ -1,11 +1,12 @@
 /* ---------- rendering ---------- */
 const Render = (() => {
   let els = {};
-  let state = { files: [], current: null, query: '' };
+  let state = { files: [], groups: [], current: null, query: '', activeFolder: null, collapsed: new Set() };
 
   function init(){
     els = {
       sidebar: document.getElementById('sidebar'),
+      folderTabs: document.getElementById('folderTabs'),
       tabs: document.getElementById('tabs'),
       pageDesc: document.getElementById('pageDesc'),
       lineCount: document.getElementById('lineCount'),
@@ -13,6 +14,15 @@ const Render = (() => {
       status: document.getElementById('status'),
       search: document.getElementById('searchInput'),
     };
+  }
+
+  function buildGroups(files){
+    const map = new Map();
+    files.forEach(f => {
+      if(!map.has(f.folder)) map.set(f.folder, { key: f.folder, label: f.folderLabel, files: [] });
+      map.get(f.folder).files.push(f);
+    });
+    return Array.from(map.values());
   }
 
   function setStatus(text, cls){
@@ -28,35 +38,105 @@ const Render = (() => {
 
   function selectFile(f){
     state.current = f;
+    state.activeFolder = f.folder;
+    state.collapsed.delete(f.folder);
     renderAll();
   }
 
+  function selectFolder(key){
+    state.activeFolder = key;
+    state.collapsed.delete(key);
+    const group = state.groups.find(g => g.key === key);
+    if(group && group.files.length && (!state.current || state.current.folder !== key)){
+      state.current = group.files[0];
+      renderAll();
+    } else {
+      renderNav();
+    }
+  }
+
+  function toggleGroup(key){
+    if(state.collapsed.has(key)) state.collapsed.delete(key); else state.collapsed.add(key);
+    renderNav();
+  }
+
+  function itemHtml(f){
+    return `
+      <div class="sidebar-item${state.current && state.current.id === f.id ? ' active' : ''}" data-id="${f.id}">
+        <span class="dot"></span>${f.name}
+      </div>
+    `;
+  }
+
+  function tabHtml(f){
+    return `<button class="tab${state.current && state.current.id === f.id ? ' active' : ''}" data-id="${f.id}">${f.name}</button>`;
+  }
+
+  function groupHtml(g){
+    return `
+      <div class="sidebar-group${state.collapsed.has(g.key) ? ' collapsed' : ''}">
+        <button class="sidebar-group-header" data-folder="${g.key}">
+          <span class="chev">▸</span>
+          <span class="folder-name">${g.label}</span>
+          <span class="folder-count">${g.files.length}</span>
+        </button>
+        <div class="sidebar-group-body">
+          ${g.files.map(itemHtml).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function folderPillHtml(g){
+    return `
+      <button class="folder-pill${state.activeFolder === g.key ? ' active' : ''}" data-folder="${g.key}">
+        <span class="fname">${g.label}</span><span class="fcount">${g.files.length}</span>
+      </button>
+    `;
+  }
+
+  function wireFileClicks(container){
+    container.querySelectorAll('[data-id]').forEach(el => {
+      el.addEventListener('click', () => {
+        const f = state.files.find(x => x.id === el.dataset.id);
+        if(f) selectFile(f);
+      });
+    });
+  }
+
   function renderNav(){
+    const q = state.query.trim().toLowerCase();
+    const searching = !!q;
     const list = filteredFiles();
 
-    els.sidebar.innerHTML = `<div class="sidebar-label">files · ${state.files.length}</div>` +
-      list.map(f => `
-        <div class="sidebar-item${state.current && state.current.id === f.id ? ' active' : ''}" data-id="${f.id}">
-          <span class="dot"></span>${f.name}
-        </div>
-      `).join('') || `<div class="sidebar-label">no matches</div>`;
-
-    els.sidebar.querySelectorAll('.sidebar-item').forEach(el => {
-      el.addEventListener('click', () => {
-        const f = state.files.find(x => x.id === el.dataset.id);
-        if(f) selectFile(f);
-      });
+    /* ---- sidebar (desktop) ---- */
+    if(searching){
+      els.sidebar.innerHTML = `<div class="sidebar-label">matches · ${list.length}</div>` +
+        (list.map(itemHtml).join('') || `<div class="sidebar-label">no matches</div>`);
+    } else {
+      els.sidebar.innerHTML = state.groups.map(groupHtml).join('') || `<div class="sidebar-label">no files yet</div>`;
+    }
+    wireFileClicks(els.sidebar);
+    els.sidebar.querySelectorAll('.sidebar-group-header').forEach(el => {
+      el.addEventListener('click', () => toggleGroup(el.dataset.folder));
     });
 
-    els.tabs.innerHTML = list.map(f => `
-        <button class="tab${state.current && state.current.id === f.id ? ' active' : ''}" data-id="${f.id}">${f.name}</button>
-      `).join('');
-    els.tabs.querySelectorAll('.tab').forEach(el => {
-      el.addEventListener('click', () => {
-        const f = state.files.find(x => x.id === el.dataset.id);
-        if(f) selectFile(f);
+    /* ---- mobile: folder pills + file pills ---- */
+    if(searching){
+      els.folderTabs.classList.add('hidden');
+      els.folderTabs.innerHTML = '';
+      els.tabs.innerHTML = list.map(tabHtml).join('');
+    } else {
+      els.folderTabs.classList.remove('hidden');
+      els.folderTabs.innerHTML = state.groups.map(folderPillHtml).join('');
+      els.folderTabs.querySelectorAll('.folder-pill').forEach(el => {
+        el.addEventListener('click', () => selectFolder(el.dataset.folder));
       });
-    });
+
+      const activeGroup = state.groups.find(g => g.key === state.activeFolder) || state.groups[0];
+      els.tabs.innerHTML = activeGroup ? activeGroup.files.map(tabHtml).join('') : '';
+    }
+    wireFileClicks(els.tabs);
   }
 
   function renderPage(){
@@ -153,8 +233,12 @@ const Render = (() => {
 
   function setFiles(files){
     state.files = files;
+    state.groups = buildGroups(files);
     if(!state.current || !files.find(f => f.id === state.current.id)){
       state.current = files[0] || null;
+    }
+    if(!state.activeFolder || !state.groups.find(g => g.key === state.activeFolder)){
+      state.activeFolder = state.current ? state.current.folder : (state.groups[0] ? state.groups[0].key : null);
     }
   }
 

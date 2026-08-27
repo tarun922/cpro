@@ -56,6 +56,38 @@
 .tab.active{border-color:var(--accent-dim); color:var(--accent); background:var(--accent-glow); box-shadow:var(--shadow-accent-glow);}
 .tab:hover:not(.active){border-color:var(--border-strong); color:var(--text);}
 
+/* mobile folder pills — sits above the file tabs, picks which folder's files show below */
+.folder-tabs{padding:var(--space-5) var(--space-6) var(--space-2); border-bottom:none;}
+.folder-tabs.hidden{display:none;}
+.folder-pill{
+  flex:none; display:flex; align-items:center; gap:var(--space-3); font-family:var(--mono); font-size:var(--fs-2xs);
+  font-weight:var(--fw-medium); text-transform:uppercase; letter-spacing:var(--ls-wide);
+  padding:var(--space-3) var(--space-5); border-radius:var(--radius-sm);
+  border:var(--bw-hairline) solid var(--border-soft); background:transparent; color:var(--text-faint);
+  white-space:nowrap; cursor:pointer; transition:border-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard);
+}
+.folder-pill .fcount{color:var(--text-ghost); font-size:8.5px; font-weight:var(--fw-regular);}
+.folder-pill.active{border-color:var(--accent-dim); color:var(--accent); background:var(--accent-glow-faint);}
+.folder-pill.active .fcount{color:var(--accent-soft);}
+.folder-pill:hover:not(.active){color:var(--text-dim); border-color:var(--border-strong);}
+
+/* desktop sidebar folder groups */
+.sidebar-group{margin-top:var(--space-4);}
+.sidebar-group:first-child{margin-top:0;}
+.sidebar-group-header{
+  width:100%; display:flex; align-items:center; gap:var(--space-3); padding:var(--space-4) var(--space-7);
+  background:none; border:none; cursor:pointer; font-family:var(--mono); font-size:var(--fs-2xs);
+  text-transform:uppercase; letter-spacing:var(--ls-widest); color:var(--text-faint);
+  transition:color var(--dur-fast) var(--ease-standard);
+}
+.sidebar-group-header .chev{display:inline-block; font-size:8px; transform:rotate(90deg); transition:transform var(--dur-fast) var(--ease-standard); color:var(--text-ghost);}
+.sidebar-group.collapsed .sidebar-group-header .chev{transform:rotate(0deg);}
+.sidebar-group.collapsed .sidebar-group-body{display:none;}
+.sidebar-group-header .folder-name{flex:1; text-align:left; color:var(--text-dim); font-weight:var(--fw-medium);}
+.sidebar-group-header .folder-count{color:var(--text-ghost); font-size:9px;}
+.sidebar-group-header:hover .folder-name{color:var(--text);}
+.sidebar-group-header:hover .chev{color:var(--accent-soft);}
+
 /* body layout: sidebar + main (desktop) */
 .body-grid{flex:1; display:flex; width:100%;}
 
@@ -85,6 +117,7 @@ main{flex:1; padding:var(--space-8) var(--space-6) var(--space-20); min-width:0;
   .sidebar{display:block;}
   .searchwrap{display:block;}
   .tabs{display:none;}
+  .folder-tabs{display:none;}
   main{padding:var(--space-11) var(--space-14) var(--space-24);}
   .content-grid{grid-template-columns:1fr var(--rail-w); gap:var(--space-11);}
   .notes-col{position:sticky; top:calc(var(--topbar-h) + var(--space-5)); max-height:calc(100vh - var(--topbar-h) - var(--space-10)); overflow-y:auto; padding-right:var(--space-2);}
