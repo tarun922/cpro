@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Cpro</string>
+    <string name="offline_message">You\'re offline — showing the last saved version of this page.</string>
+</resources>
