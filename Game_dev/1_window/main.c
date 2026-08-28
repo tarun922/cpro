@@ -1,49 +1,45 @@
-/*
- * Chapter 1: Window & Init
- * -------------------------
- * Goal: open an empty SDL3 window and close it cleanly.
- *
- * New concepts:
- *   - SDL_Init()        : starts up SDL's internal systems (video, etc.)
- *   - SDL_CreateWindow(): creates an actual OS window
- *   - SDL_Delay()       : pauses the program (in milliseconds)
- *   - SDL_DestroyWindow(), SDL_Quit(): cleanup, always do this before exiting
- *
- * Note for C beginners: SDL_Window* is a POINTER to a window object that
- * SDL manages internally. We don't need to know what's inside it — we
- * just pass this pointer to other SDL functions that need to know
- * "which window" to act on.
- */
-
 #include <SDL3/SDL.h>
 #include <stdio.h>
 
-int main(int argc, char *argv[]) {
-    /* SDL_Init returns true on success, false on failure.
-     *      Always check return values for functions that can fail. */
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        printf("SDL_Init failed: %s\n", SDL_GetError());
-        return 1; /* non-zero return means "something went wrong" */
-    }
+int main(){
+    //intilising the game window
+    //SDL_Init(SDL_INIT_VIDEO) --> THIS HELPS TO initialise THE SDL WINDOW
 
-    /* Create a window: title, width, height, flags (0 = default behavior) */
-    SDL_Window *window = SDL_CreateWindow("Chapter 1 - Window", 800, 600, 0);
-
-    if (window == NULL) {
-        printf("CreateWindow failed: %s\n", SDL_GetError());
-        SDL_Quit();
+    if (!SDL_Init(SDL_INIT_VIDEO)){     // <--- must to do always
+        printf("failed to initialise: %s\n", SDL_GetError());
         return 1;
     }
 
-    printf("Window created! It will close in 3 seconds.\n");
+    // now definiling our window size and titile
+    // using SDL_Window *window = SDL_CreateWindow("TITLE " , X,Y,Z);
 
-    /* Keep the window open for 3 seconds so you can actually see it.
-     *      (We don't have a proper event loop yet — that's Chapter 2.) */
-    SDL_Delay(3000);
+    SDL_Window *window = SDL_CreateWindow("muhehe", 400, 300, 0);
+    if (window == NULL){
+        printf("window error: %s\n", SDL_GetError());
+        return 1;
+    }
 
-    /* Always clean up in reverse order of creation. */
-    SDL_DestroyWindow(window);
+    // THIS IS TO RENDER OUR WINDOW
+    // USING SDL_Renderer *renderer = SDL_CreateRenderer(WINDOW , {NAME OF BACKEND RENDERER TO USE LIKE VULKAN OPENGL ETCETC BUT U CAN USE NULL } )
+    // NULL IS FOR IDK JS USE THE BEST BACKEND RENDERER
+
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
+    if (renderer == NULL){
+        printf("renderer error: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    // ye 2 lines actually screen pe kuch draw karti hain
+
+    SDL_SetRenderDrawColor(renderer, 100, 100, 40, 255); // <--- THIS FILLS COLLOR ON WINDOW IT TAKES (WHERE TO DRAW , RED , BLUE ,GREEN , ALPHA -- OPACITY )
+    SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);   // <-- iske bina window blank/invisible rehti hai Wayland pe
+                                    // IT DISPLAYS THE WINDOW
+
+    SDL_Delay(3000);// WINDOW WILL OPEN FOR 3 SEC THEN CLOSES
+
+    SDL_DestroyRenderer(renderer); // DESTROYING RENDERER
+    SDL_DestroyWindow(window);// DESTROYING WINDOW
     SDL_Quit();
-
     return 0;
 }
