@@ -24,6 +24,22 @@ Just make folders inside the repo (e.g. `basics/`, `gaming/`, `dsa/`) and drop `
 
 Folders are pulled recursively (any depth), but only the top-level folder name is used for grouping — so `gaming/snake/level1.c` still groups under **gaming**.
 
+### Chapter-style course folders (e.g. `Game_dev/`)
+
+If a `.c` file sits two folders deep — `TopFolder/chapter_name/main.c` — the app treats
+it as a course chapter:
+
+- The sidebar/tab item is named after the **chapter folder** (e.g. `ch01_window` →
+  "Ch01 Window"), not the filename. This matters because every chapter's file is
+  literally called `main.c`, so naming by filename would make every entry look
+  identical.
+- If a `Makefile` sits in that same chapter folder, it's fetched too and a small
+  **main.c / Makefile** toggle appears in the code card header — click it to switch
+  which file you're viewing. The Makefile is shown plain (no annotated notes, since
+  notes are parsed from `//` comments in the `.c` file only).
+- Flat files (`folder/file.c`, one level deep — the original `cpro` style) are
+  completely unaffected and keep behaving exactly as before.
+
 ## What changed in this pass
 
 - Split the old single `index.html` (with inline `<style>`/`<script>`) into separate files, so each piece is easy to find and edit on its own:
@@ -52,3 +68,17 @@ Folders are pulled recursively (any depth), but only the top-level folder name i
   - Mobile → a folder-pill row above the existing file-tab row.
 - `index.html` got one new element (`#folderTabs`) for the mobile folder row; `css/layout.css` got the matching styles.
 - `sw.js` bumped to `cpro-notes-shell-v3` so the update actually reaches phones with an old cached shell.
+
+## What changed in this pass (chapter folders + Makefile support)
+
+- `js/github.js`: detects two-levels-deep `.c` files (`folder/chapter/main.c`) and
+  names the sidebar entry after the chapter folder instead of the filename, so
+  course chapters (e.g. `Game_dev/ch01_window/main.c`, `Game_dev/ch02_game_loop/main.c`)
+  don't all collapse into an identical "Main" entry. Also fetches any `Makefile`
+  sitting in the same chapter folder and attaches it to that entry.
+- `js/render.js`: adds a **main.c / Makefile** toggle in the code card header
+  (only rendered when a Makefile exists for that entry), switches the displayed
+  code and the copy-button target accordingly, and shows a placeholder in the
+  notes rail while viewing the Makefile.
+- `css/components.css`: new `.code-toggle` / `.toggle-btn` styles for the toggle.
+- `sw.js` bumped to `cpro-notes-shell-v4`.

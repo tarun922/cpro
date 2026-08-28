@@ -1,19 +1,19 @@
-const CACHE = 'cpro-notes-shell-v3';
+const CACHE = 'cpro-notes-shell-v4';
 const SHELL = [
   './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  './css/tokens.css',
-  './css/layout.css',
-  './css/components.css',
-  './js/config.js',
-  './js/highlight.js',
-  './js/notesParser.js',
-  './js/github.js',
-  './js/render.js',
-  './js/app.js',
+'./index.html',
+'./manifest.json',
+'./icon-192.png',
+'./icon-512.png',
+'./css/tokens.css',
+'./css/layout.css',
+'./css/components.css',
+'./js/config.js',
+'./js/highlight.js',
+'./js/notesParser.js',
+'./js/github.js',
+'./js/render.js',
+'./js/app.js',
 ];
 
 self.addEventListener('install', e => {

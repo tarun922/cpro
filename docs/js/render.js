@@ -1,18 +1,18 @@
 /* ---------- rendering ---------- */
 const Render = (() => {
   let els = {};
-  let state = { files: [], groups: [], current: null, query: '', activeFolder: null, collapsed: new Set() };
+  let state = { files: [], groups: [], current: null, query: '', activeFolder: null, collapsed: new Set(), view: 'code' };
 
   function init(){
     els = {
       sidebar: document.getElementById('sidebar'),
-      folderTabs: document.getElementById('folderTabs'),
-      tabs: document.getElementById('tabs'),
-      pageDesc: document.getElementById('pageDesc'),
-      lineCount: document.getElementById('lineCount'),
-      content: document.getElementById('content'),
-      status: document.getElementById('status'),
-      search: document.getElementById('searchInput'),
+                folderTabs: document.getElementById('folderTabs'),
+                tabs: document.getElementById('tabs'),
+                pageDesc: document.getElementById('pageDesc'),
+                lineCount: document.getElementById('lineCount'),
+                content: document.getElementById('content'),
+                status: document.getElementById('status'),
+                search: document.getElementById('searchInput'),
     };
   }
 
@@ -39,6 +39,7 @@ const Render = (() => {
   function selectFile(f){
     state.current = f;
     state.activeFolder = f.folder;
+    state.view = 'code';
     state.collapsed.delete(f.folder);
     renderAll();
   }
@@ -49,6 +50,7 @@ const Render = (() => {
     const group = state.groups.find(g => g.key === key);
     if(group && group.files.length && (!state.current || state.current.folder !== key)){
       state.current = group.files[0];
+      state.view = 'code';
       renderAll();
     } else {
       renderNav();
@@ -62,9 +64,9 @@ const Render = (() => {
 
   function itemHtml(f){
     return `
-      <div class="sidebar-item${state.current && state.current.id === f.id ? ' active' : ''}" data-id="${f.id}">
-        <span class="dot"></span>${f.name}
-      </div>
+    <div class="sidebar-item${state.current && state.current.id === f.id ? ' active' : ''}" data-id="${f.id}">
+    <span class="dot"></span>${f.name}
+    </div>
     `;
   }
 
@@ -74,24 +76,24 @@ const Render = (() => {
 
   function groupHtml(g){
     return `
-      <div class="sidebar-group${state.collapsed.has(g.key) ? ' collapsed' : ''}">
-        <button class="sidebar-group-header" data-folder="${g.key}">
-          <span class="chev">▸</span>
-          <span class="folder-name">${g.label}</span>
-          <span class="folder-count">${g.files.length}</span>
-        </button>
-        <div class="sidebar-group-body">
-          ${g.files.map(itemHtml).join('')}
-        </div>
-      </div>
+    <div class="sidebar-group${state.collapsed.has(g.key) ? ' collapsed' : ''}">
+    <button class="sidebar-group-header" data-folder="${g.key}">
+    <span class="chev">▸</span>
+    <span class="folder-name">${g.label}</span>
+    <span class="folder-count">${g.files.length}</span>
+    </button>
+    <div class="sidebar-group-body">
+    ${g.files.map(itemHtml).join('')}
+    </div>
+    </div>
     `;
   }
 
   function folderPillHtml(g){
     return `
-      <button class="folder-pill${state.activeFolder === g.key ? ' active' : ''}" data-folder="${g.key}">
-        <span class="fname">${g.label}</span><span class="fcount">${g.files.length}</span>
-      </button>
+    <button class="folder-pill${state.activeFolder === g.key ? ' active' : ''}" data-folder="${g.key}">
+    <span class="fname">${g.label}</span><span class="fcount">${g.files.length}</span>
+    </button>
     `;
   }
 
@@ -112,7 +114,7 @@ const Render = (() => {
     /* ---- sidebar (desktop) ---- */
     if(searching){
       els.sidebar.innerHTML = `<div class="sidebar-label">matches · ${list.length}</div>` +
-        (list.map(itemHtml).join('') || `<div class="sidebar-label">no matches</div>`);
+      (list.map(itemHtml).join('') || `<div class="sidebar-label">no matches</div>`);
     } else {
       els.sidebar.innerHTML = state.groups.map(groupHtml).join('') || `<div class="sidebar-label">no files yet</div>`;
     }
@@ -147,59 +149,86 @@ const Render = (() => {
       return;
     }
 
+    const showingMakefile = state.view === 'makefile' && current.makefile;
+    const bodyText = showingMakefile ? current.makefile : current.code;
+    const displayName = showingMakefile ? 'Makefile' : current.file;
+
     els.pageDesc.textContent = current.file;
-    const lines = current.code.split('\n');
-    els.lineCount.textContent = lines.length + ' lines · ' + current.notes.length + ' notes';
+    const lines = bodyText.split('\n');
+    els.lineCount.textContent = showingMakefile
+    ? lines.length + ' lines'
+    : lines.length + ' lines · ' + current.notes.length + ' notes';
 
     const codeHtml = lines.map((ln, idx) => {
       const n = idx + 1;
       return `<div class="code-line" data-line="${n}"><span class="ln">${n}</span><span class="src">${Highlight.line(ln)}</span></div>`;
     }).join('');
 
-    const notesHtml = current.notes.map((n, idx) => `
-      <div class="note" data-idx="${idx}" data-lines="${n.lines[0]}-${n.lines[1]}">
-        <div class="note-top">
-          <span class="note-title">${n.title}</span>
-          <span class="badge ${n.type}">L${n.lines[0]}-${n.lines[1]}</span>
-        </div>
-        <div class="note-body">${n.body}</div>
-      </div>
-    `).join('') || `<div class="empty" style="padding:20px 4px;">no annotated comments in this file yet.</div>`;
+    const toggleHtml = current.makefile ? `
+    <div class="code-toggle">
+    <button class="toggle-btn${!showingMakefile ? ' active' : ''}" id="viewCodeBtn">${current.file}</button>
+    <button class="toggle-btn${showingMakefile ? ' active' : ''}" id="viewMakeBtn">Makefile</button>
+    </div>
+    ` : '';
+
+    const notesHtml = showingMakefile
+    ? `<div class="empty" style="padding:20px 4px;">this is the build recipe for ${current.file} — switch back to ${current.file} to see annotated notes.</div>`
+    : (current.notes.map((n, idx) => `
+    <div class="note" data-idx="${idx}" data-lines="${n.lines[0]}-${n.lines[1]}">
+    <div class="note-top">
+    <span class="note-title">${n.title}</span>
+    <span class="badge ${n.type}">L${n.lines[0]}-${n.lines[1]}</span>
+    </div>
+    <div class="note-body">${n.body}</div>
+    </div>
+    `).join('') || `<div class="empty" style="padding:20px 4px;">no annotated comments in this file yet.</div>`);
 
     els.content.innerHTML = `
-      <div class="content-grid">
-        <div class="code-card">
-          <div class="code-head">
-            <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-            <span class="fname">${current.file}</span>
-            <button class="copybtn" id="copyBtn">copy</button>
-          </div>
-          <div class="code-body" id="codeBody">${codeHtml}</div>
-        </div>
-        <div class="notes-col">
-          <div class="rail-label">what's happening</div>
-          ${notesHtml}
-        </div>
-      </div>
+    <div class="content-grid">
+    <div class="code-card">
+    <div class="code-head">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <span class="fname">${displayName}</span>
+    ${toggleHtml}
+    <button class="copybtn" id="copyBtn">copy</button>
+    </div>
+    <div class="code-body" id="codeBody">${codeHtml}</div>
+    </div>
+    <div class="notes-col">
+    <div class="rail-label">what's happening</div>
+    ${notesHtml}
+    </div>
+    </div>
     `;
 
-    wireNoteInteractions(current);
+    wireNoteInteractions(current, bodyText, showingMakefile);
   }
 
-  function wireNoteInteractions(current){
+  function wireNoteInteractions(current, bodyText, showingMakefile){
     const codeBody = document.getElementById('codeBody');
     const copyBtn = document.getElementById('copyBtn');
+    const viewCodeBtn = document.getElementById('viewCodeBtn');
+    const viewMakeBtn = document.getElementById('viewMakeBtn');
 
     if(copyBtn){
       copyBtn.addEventListener('click', async () => {
         try{
-          await navigator.clipboard.writeText(current.code);
+          await navigator.clipboard.writeText(bodyText);
           copyBtn.textContent = 'copied';
           copyBtn.classList.add('copied');
           setTimeout(() => { copyBtn.textContent = 'copy'; copyBtn.classList.remove('copied'); }, 1200);
         }catch(e){}
       });
     }
+
+    if(viewCodeBtn){
+      viewCodeBtn.addEventListener('click', () => { state.view = 'code'; renderPage(); });
+    }
+    if(viewMakeBtn){
+      viewMakeBtn.addEventListener('click', () => { state.view = 'makefile'; renderPage(); });
+    }
+
+    if(showingMakefile) return; // no line-note highlighting for the Makefile view
 
     els.content.querySelectorAll('.note').forEach(el => {
       el.addEventListener('click', () => {
@@ -236,6 +265,7 @@ const Render = (() => {
     state.groups = buildGroups(files);
     if(!state.current || !files.find(f => f.id === state.current.id)){
       state.current = files[0] || null;
+      state.view = 'code';
     }
     if(!state.activeFolder || !state.groups.find(g => g.key === state.activeFolder)){
       state.activeFolder = state.current ? state.current.folder : (state.groups[0] ? state.groups[0].key : null);

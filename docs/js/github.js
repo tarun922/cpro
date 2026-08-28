@@ -17,8 +17,20 @@ const GitHub = (() => {
     const treeRes = await fetch(`https://api.github.com/repos/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/git/trees/${branch}?recursive=1`);
     if(!treeRes.ok) throw new Error('tree failed: ' + treeRes.status);
     const treeData = await treeRes.json();
+    const tree = treeData.tree || [];
 
-    const cEntries = (treeData.tree || []).filter(e => e.type === 'blob' && e.path.endsWith('.c'));
+    const cEntries = tree.filter(e => e.type === 'blob' && e.path.endsWith('.c'));
+
+    // Makefiles aren't shown as their own sidebar entries — they're fetched up front and
+    // attached to whichever .c file lives in the same directory, keyed by that directory path.
+    const makefileEntries = tree.filter(e => e.type === 'blob' && e.path.split('/').pop() === 'Makefile');
+    const makefileByDir = {};
+    for(const entry of makefileEntries){
+      const dir = entry.path.split('/').slice(0, -1).join('/');
+      const rawUrl = `https://raw.githubusercontent.com/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/${branch}/${entry.path}`;
+      const r = await fetch(rawUrl);
+      makefileByDir[dir] = await r.text();
+    }
 
     // sort: grouped by top-level folder (alphabetical), root-level files last, files alphabetical within a folder
     cEntries.sort((a, b) => {
@@ -39,8 +51,14 @@ const GitHub = (() => {
       const parts = path.split('/');
       const fileName = parts[parts.length - 1];
       const folder = parts.length > 1 ? parts[0] : ROOT_KEY;
+      const dir = parts.slice(0, -1).join('/');
 
-      // raw.githubusercontent.com doesn't count against the api.github.com rate limit
+      // chapter-style: folder/chapter/main.c (depth 3+). Every chapter's file is literally
+      // called main.c, so we name the entry after the chapter folder instead of the filename,
+      // otherwise every item in a course folder would show up as "Main".
+      const isChapterStyle = parts.length >= 3;
+      const chapterName = isChapterStyle ? parts[parts.length - 2] : null;
+
       const rawUrl = `https://raw.githubusercontent.com/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/${branch}/${path}`;
       const r = await fetch(rawUrl);
       const code = await r.text();
@@ -51,9 +69,10 @@ const GitHub = (() => {
         path,
         folder,
         folderLabel: folder === ROOT_KEY ? 'misc' : titleCase(folder),
-        name: titleCase(fileName.replace(/\.c$/, '')),
-        code,
-        notes: NotesParser.parse(code),
+                   name: isChapterStyle ? titleCase(chapterName) : titleCase(fileName.replace(/\.c$/, '')),
+                   code,
+                   notes: NotesParser.parse(code),
+                   makefile: makefileByDir[dir] || null,
       });
     }
     return results;
