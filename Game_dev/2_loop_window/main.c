@@ -32,7 +32,7 @@ int main(){
 
     SDL_Event event;
     while (run == 1){
-        // --- 1. saare pending events check karo ---
+        // <--- 1. saare pending events check karo --->
         while (SDL_PollEvent(&event)){
             if (event.type == SDL_EVENT_QUIT){
                 run = 0;   // X button dabaya, toh loop band karo
